@@ -1,0 +1,98 @@
+[gd_scene load_steps=3 format=3 uid="uid://dxfleqap1gtrn"]
+
+[ext_resource type="Script" path="res://lobby.gd" id="1_nj7b6"]
+[ext_resource type="PackedScene" uid="uid://c5pmtxkp02ufd" path="res://player_lobby.tscn" id="2_seu5f"]
+
+[node name="lobby" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_nj7b6")
+
+[node name="margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 15
+theme_override_constants/margin_bottom = 15
+
+[node name="lobby_selector" type="HSplitContainer" parent="margin"]
+visible = false
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="margin/lobby_selector"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="margin/lobby_selector/VBoxContainer"]
+layout_mode = 2
+text = "Multiplayer"
+
+[node name="create" type="Button" parent="margin/lobby_selector/VBoxContainer"]
+layout_mode = 2
+text = "create lobby"
+
+[node name="refresh" type="Button" parent="margin/lobby_selector/VBoxContainer"]
+layout_mode = 2
+text = "refresh lobbies"
+
+[node name="lobby_list" type="VBoxContainer" parent="margin/lobby_selector"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="margin/lobby_selector/lobby_list"]
+layout_mode = 2
+text = "Lobby list"
+
+[node name="scroller" type="ScrollContainer" parent="margin/lobby_selector/lobby_list"]
+custom_minimum_size = Vector2(0, 500)
+layout_mode = 2
+
+[node name="list" type="VBoxContainer" parent="margin/lobby_selector/lobby_list/scroller"]
+layout_mode = 2
+
+[node name="room" type="HSplitContainer" parent="margin"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="margin/room"]
+layout_mode = 2
+
+[node name="title" type="Label" parent="margin/room/VBoxContainer"]
+layout_mode = 2
+text = "Multiplayer"
+
+[node name="level_label" type="Label" parent="margin/room/VBoxContainer"]
+layout_mode = 2
+text = "Level"
+
+[node name="level" type="OptionButton" parent="margin/room/VBoxContainer"]
+layout_mode = 2
+item_count = 2
+selected = 0
+popup/item_0/text = "Demo"
+popup/item_0/id = 0
+popup/item_1/text = "Duel"
+popup/item_1/id = 1
+
+[node name="start" type="Button" parent="margin/room/VBoxContainer"]
+layout_mode = 2
+text = "start"
+
+[node name="leave" type="Button" parent="margin/room/VBoxContainer"]
+layout_mode = 2
+text = "leave"
+
+[node name="player_list" type="VBoxContainer" parent="margin/room"]
+layout_mode = 2
+
+[node name="player_lobby" parent="margin/room/player_list" instance=ExtResource("2_seu5f")]
+layout_mode = 2
+
+[node name="player_lobby2" parent="margin/room/player_list" instance=ExtResource("2_seu5f")]
+layout_mode = 2

@@ -15,6 +15,12 @@ signal handle_data(data)
 # emited when lobby list is updated (array of dictionnary)
 signal lobby_list_update(lobbies)
 
+# signal when lobby is joined
+signal lobby_joined()
+
+# signal when lobby is updated
+signal lobby_update()
+
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	_initialize_Steam()
@@ -169,6 +175,8 @@ func _on_Lobby_Joined(lobby_id: int, _permissions: int, _locked: bool, response:
 		# Make the initial handshake
 		_make_P2P_Handshake()
 
+		lobby_joined.emit()
+
 	# Else it failed for some reason
 	else:
 		# Get the failure reason
@@ -208,6 +216,8 @@ func _get_Lobby_Members() -> void:
 
 		# Add them to the list
 		LOBBY_MEMBERS.append({"steam_id":MEMBER_STEAM_ID, "steam_name":MEMBER_STEAM_NAME})
+
+	lobby_update.emit()
 
 # A user's information has changed
 func _on_Persona_Change(_steam_id: int, _flag: int) -> void:
@@ -314,3 +324,8 @@ func _on_Lobby_Join_Requested(lobby_id: int, friendID: int) -> void:
 
 	# Attempt to join the lobby
 	_join_Lobby(lobby_id)
+
+func is_host():
+	if LOBBY_ID != 0:
+		return Steam.getLobbyOwner(LOBBY_ID) == STEAM_ID
+	return true
