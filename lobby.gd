@@ -31,6 +31,7 @@ func _ready():
 	GlobalSteam.lobby_update.connect(update_lobby)
 
 	leave.pressed.connect(leave_lobby)
+	level.item_selected.connect(on_level_change)
 
 	GlobalSteam._on_Open_Lobby_List_pressed()
 
@@ -103,12 +104,17 @@ func handle_data(data):
 		elif data["sync_type"] == SyncType.StartGame:
 			launch_game.emit()
 
-func on_level_change():
-	pass
+func on_level_change(value):
+	var data = {}
+	data["sync_type"] = SyncType.LevelChange
+	data["level"] = value
+
+	GlobalSteam._send_P2P_Packet(0, data)
 
 func on_team_change(node):
 	var data = {}
 	data["sync_type"] = SyncType.TeamChange
 	data["id"] = node.player_id
+	data["team_id"] = node.player_id
 
 	GlobalSteam._send_P2P_Packet(0, data)
