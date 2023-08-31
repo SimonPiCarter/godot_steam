@@ -93,7 +93,7 @@ func update_lobby():
 			if loaded_teams.has(member["steam_id"]):
 				node.player.selected = loaded_teams[member["steam_id"]]
 
-			if GlobalSteam.is_host():
+			if GlobalSteam.is_host() and member["steam_id"] != GlobalSteam.get_host():
 				send_init(member["steam_id"])
 
 		members_id.push_back(member["steam_id"])
@@ -108,12 +108,14 @@ func leave_lobby():
 	room.hide()
 	GlobalSteam.leave_lobby()
 	loaded_teams.clear()
+	if GlobalSteam.is_host():
+		disconnect_all()
 
 ######################
 ##     Data sync
 ######################
 
-enum SyncType { InitRoom, LevelChange, TeamChange, StartGame }
+enum SyncType { InitRoom, LevelChange, TeamChange, StartGame, Disconnect }
 
 #
 # Data sync package nomenclature
@@ -149,10 +151,12 @@ func handle_data(data):
 			player_node[data["id"]].player.selected = data["team_id"]
 		elif data["sync_type"] == SyncType.StartGame:
 			launch_game.emit()
+		elif data["sync_type"] == SyncType.Disconnect:
+			leave_lobby()
 
 func send_init(id):
 	var data = {}
-	data["sync_type"] = SyncType.LevelChange
+	data["sync_type"] = SyncType.InitRoom
 	data["level"] = level.selected
 	var teams = {}
 	for node in player_node.values():
@@ -174,4 +178,9 @@ func on_team_change(team, player_id):
 	data["id"] = player_id
 	data["team_id"] = team
 
+	GlobalSteam._send_P2P_Packet(0, data)
+
+func disconnect_all():
+	var data = {}
+	data["sync_type"] = SyncType.Disconnect
 	GlobalSteam._send_P2P_Packet(0, data)
