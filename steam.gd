@@ -27,7 +27,7 @@ func _ready():
 	print(Steam.isSteamRunning())
 
 	var _IS_ONLINE: bool = Steam.loggedOn()
-	var _STEAM_ID: int = Steam.getSteamID()
+	STEAM_ID = Steam.getSteamID()
 	var IS_OWNED: bool = Steam.isSubscribed()
 
 	print(STEAM_ID," : ", IS_OWNED)
@@ -327,5 +327,6 @@ func _on_Lobby_Join_Requested(lobby_id: int, friendID: int) -> void:
 
 func is_host():
 	if LOBBY_ID != 0:
+		print(Steam.getLobbyOwner(LOBBY_ID), " == ", STEAM_ID)
 		return Steam.getLobbyOwner(LOBBY_ID) == STEAM_ID
 	return true
