@@ -18,6 +18,9 @@ signal launch_game()
 # used to update team and remove
 var player_node = {}
 
+# teams from steam id (used for initialisation when entering a room)
+var loaded_teams = {}
+
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	room.hide()
@@ -80,11 +83,19 @@ func update_lobby():
 			var node = preload("res://player_lobby.tscn").instantiate()
 			player_node[member["steam_id"]] = node
 			player_list.add_child(node)
+
 			node.player_name.text = member["steam_name"]
 			node.kick.disabled = not GlobalSteam.is_host() or member["steam_id"] == GlobalSteam.get_host()
 			node.player.disabled = not GlobalSteam.is_host() and member["steam_id"] != GlobalSteam.STEAM_ID
 			node.player_id = member["steam_id"]
 			node.player.item_selected.connect(on_team_change.bind(member["steam_id"]))
+
+			if loaded_teams.has(member["steam_id"]):
+				node.player.selected = loaded_teams[member["steam_id"]]
+
+			if GlobalSteam.is_host():
+				send_init(member["steam_id"])
+
 		members_id.push_back(member["steam_id"])
 
 	# remove old players
@@ -96,12 +107,13 @@ func leave_lobby():
 	lobby_selector.show()
 	room.hide()
 	GlobalSteam.leave_lobby()
+	loaded_teams.clear()
 
 ######################
 ##     Data sync
 ######################
 
-enum SyncType { LevelChange, TeamChange, StartGame }
+enum SyncType { InitRoom, LevelChange, TeamChange, StartGame }
 
 #
 # Data sync package nomenclature
@@ -113,6 +125,9 @@ enum SyncType { LevelChange, TeamChange, StartGame }
 #   - data["team_id"] : int
 # - StartGame
 #   - launch the game
+# - InitRoom
+#   - data["level"] in 0,1
+#   - data["teams"] : {"steam_id":team }
 #
 
 func handle_data(data):
@@ -120,12 +135,26 @@ func handle_data(data):
 	print("Packet: "+str(data))
 
 	if data.has("sync_type"):
-		if data["sync_type"] == SyncType.LevelChange:
+		if data["sync_type"] == SyncType.InitRoom:
+			level.selected = data["level"]
+			loaded_teams = data["teams"]
+		elif data["sync_type"] == SyncType.LevelChange:
 			level.selected = data["level"]
 		elif data["sync_type"] == SyncType.TeamChange:
 			player_node[data["id"]].player.selected = data["team_id"]
 		elif data["sync_type"] == SyncType.StartGame:
 			launch_game.emit()
+
+func send_init(id):
+	var data = {}
+	data["sync_type"] = SyncType.LevelChange
+	data["level"] = level.selected
+	var teams = {}
+	for node in player_node:
+		teams[node.player_id] = node.player.selected
+	data["teams"] = teams
+
+	GlobalSteam._send_P2P_Packet(id, data)
 
 func on_level_change(value):
 	var data = {}
