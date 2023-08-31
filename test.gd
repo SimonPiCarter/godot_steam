@@ -1,11 +1,44 @@
 extends Node2D
 
+#####################
+## UI
+######################
+
+@onready var join = $VBoxContainer/join
+@onready var list = $VBoxContainer/list
+@onready var send = $VBoxContainer/send
+
+func init_ui():
+	join.pressed.connect(_create_Lobby)
+
+	list.pressed.connect(list_lobbies)
+
+	send.pressed.connect(send_data)
+
+func list_lobbies():
+	Steam.requestLobbyList()
+
+func send_data():
+	var data = {"message":"handshake", "from":STEAM_ID, "data": []}
+	data["data"].push_back(12)
+	data["data"].push_back("test")
+	data["data"].push_back(true)
+
+	_send_P2P_Packet(0, data)
+
+func handle_data(data):
+	pass
+
+#####################
+#####################
+#####################
+
+
 const PACKET_READ_LIMIT: int = 32
 var STEAM_ID: int = 0
 var STEAM_USERNAME: String = ""
 var LOBBY_ID: int = 0
 var LOBBY_MEMBERS: Array = []
-var DATA
 var LOBBY_VOTE_KICK: bool = false
 var LOBBY_MAX_MEMBERS: int = 10
 
@@ -39,9 +72,7 @@ func _ready():
 	# Check for command line arguments
 	_check_Command_Line()
 
-	print(Steam.hasMatchmaking())
-
-	_create_Lobby()
+	init_ui()
 
 func _initialize_Steam() -> void:
 	var INIT: Dictionary = Steam.steamInit()
@@ -54,7 +85,7 @@ func _initialize_Steam() -> void:
 func _create_Lobby() -> void:
 	# Make sure a lobby is not already set
 	if LOBBY_ID == 0:
-		Steam.createLobby(Steam.LobbyType.LOBBY_TYPE_FRIENDS_ONLY, LOBBY_MAX_MEMBERS)
+		Steam.createLobby(Steam.LobbyType.LOBBY_TYPE_PUBLIC, LOBBY_MAX_MEMBERS)
 		print("Trying to create a lobby")
 
 func _on_Lobby_Created(connect_id: int, lobby_id: int) -> void:
@@ -75,8 +106,41 @@ func _on_Lobby_Created(connect_id: int, lobby_id: int) -> void:
 		var RELAY: bool = Steam.allowP2PPacketRelay(true)
 		print("Allowing Steam to be relay backup: "+str(RELAY))
 
-func _process(_delta: float) -> void:
+func _process(_delta):
 	Steam.run_callbacks()
+
+	if LOBBY_ID > 0:
+		_read_All_P2P_Packets()
+
+func _read_All_P2P_Packets(read_count: int = 0):
+	if read_count >= PACKET_READ_LIMIT:
+		return
+	if Steam.getAvailableP2PPacketSize(0) > 0:
+		_read_P2P_Packet()
+		_read_All_P2P_Packets(read_count + 1)
+
+func _read_P2P_Packet() -> void:
+	var PACKET_SIZE: int = Steam.getAvailableP2PPacketSize(0)
+
+	# There is a packet
+	if PACKET_SIZE > 0:
+		var pack: Dictionary = Steam.readP2PPacket(PACKET_SIZE, 0)
+
+		if pack.size() == 0 or pack == null:
+			print("WARNING: read an empty packet with non-zero size!")
+
+		# Get the remote user's ID
+		var PACKET_SENDER: int = pack['steam_id_remote']
+
+		# Make the packet data readable
+		var PACKET_CODE: PackedByteArray = pack['data']
+		var READABLE: Dictionary = bytes_to_var(PACKET_CODE)
+
+		# Print the packet to output
+		print("Packet: "+str(READABLE))
+
+		# Append logic here to deal with packet data
+		handle_data(READABLE)
 
 func _check_Command_Line() -> void:
 	var ARGUMENTS: Array = OS.get_cmdline_args()
@@ -103,6 +167,8 @@ func _on_Open_Lobby_List_pressed() -> void:
 	Steam.requestLobbyList()
 
 func _on_Lobby_Match_List(lobbies: Array) -> void:
+	for child in $VBoxContainer/ScrollContainer/VBoxContainer.get_children():
+		child.queue_free()
 	for LOBBY in lobbies:
 		# Pull lobby data from Steam, these are specific to our example
 		var LOBBY_NAME: String = Steam.getLobbyData(LOBBY, "name")
@@ -119,7 +185,7 @@ func _on_Lobby_Match_List(lobbies: Array) -> void:
 		LOBBY_BUTTON.connect("pressed", Callable(self, "_join_Lobby").bind(LOBBY))
 
 		# Add the new lobby to the list
-		$Lobbies/Scroll/List.add_child(LOBBY_BUTTON)
+		$VBoxContainer/ScrollContainer/VBoxContainer.add_child(LOBBY_BUTTON)
 
 func _join_Lobby(lobby_id: int) -> void:
 	print("Attempting to join lobby "+str(lobby_id)+"...")
@@ -200,7 +266,7 @@ func _send_P2P_Packet(target: int, packet_data: Dictionary) -> void:
 	var CHANNEL: int = 0
 
 	# Create a data array to send the data through
-	var DATA: PackedByteArray
+	var DATA: PackedByteArray = []
 	DATA.append_array(var_to_bytes(packet_data))
 
 	# If sending a packet to everyone

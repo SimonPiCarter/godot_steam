@@ -4,3 +4,26 @@
 
 [node name="Node2D" type="Node2D"]
 script = ExtResource("1_ajnn6")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+offset_right = 1143.0
+offset_bottom = 538.0
+
+[node name="join" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Create lobby"
+
+[node name="list" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "List lobby"
+
+[node name="send" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Send Data"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 200)
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/ScrollContainer"]
+layout_mode = 2
