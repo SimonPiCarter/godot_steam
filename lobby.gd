@@ -137,7 +137,12 @@ func handle_data(data):
 	if data.has("sync_type"):
 		if data["sync_type"] == SyncType.InitRoom:
 			level.selected = data["level"]
+			# store teams for further use if node are added after this
 			loaded_teams = data["teams"]
+			# update everynode already here
+			for id in data["teams"].keys():
+				if player_node.has(id):
+					player_node[id].player.selected = data["teams"][id]
 		elif data["sync_type"] == SyncType.LevelChange:
 			level.selected = data["level"]
 		elif data["sync_type"] == SyncType.TeamChange:
@@ -150,7 +155,7 @@ func send_init(id):
 	data["sync_type"] = SyncType.LevelChange
 	data["level"] = level.selected
 	var teams = {}
-	for node in player_node:
+	for node in player_node.values():
 		teams[node.player_id] = node.player.selected
 	data["teams"] = teams
 
