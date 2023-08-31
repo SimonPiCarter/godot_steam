@@ -108,8 +108,11 @@ func leave_lobby():
 	room.hide()
 	GlobalSteam.leave_lobby()
 	loaded_teams.clear()
+
 	if GlobalSteam.is_host():
 		disconnect_all()
+
+	GlobalSteam._on_Open_Lobby_List_pressed()
 
 ######################
 ##     Data sync
