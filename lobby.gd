@@ -84,6 +84,7 @@ func update_lobby():
 			node.kick.disabled = not GlobalSteam.is_host() or member["steam_id"] == GlobalSteam.get_host()
 			node.player.disabled = not GlobalSteam.is_host() and member["steam_id"] != GlobalSteam.STEAM_ID
 			node.player_id = member["steam_id"]
+			node.player.item_selected.connect(on_team_change.bind(member["steam_id"]))
 		members_id.push_back(member["steam_id"])
 
 	# remove old players
@@ -133,10 +134,10 @@ func on_level_change(value):
 
 	GlobalSteam._send_P2P_Packet(0, data)
 
-func on_team_change(node):
+func on_team_change(team, player_id):
 	var data = {}
 	data["sync_type"] = SyncType.TeamChange
-	data["id"] = node.player_id
-	data["team_id"] = node.player_id
+	data["id"] = player_id
+	data["team_id"] = team
 
 	GlobalSteam._send_P2P_Packet(0, data)
