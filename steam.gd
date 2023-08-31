@@ -325,8 +325,17 @@ func _on_Lobby_Join_Requested(lobby_id: int, friendID: int) -> void:
 	# Attempt to join the lobby
 	_join_Lobby(lobby_id)
 
+func get_host() -> int:
+	if LOBBY_ID != 0:
+		return Steam.getLobbyOwner(LOBBY_ID)
+	return 0
+
 func is_host():
 	if LOBBY_ID != 0:
 		print(Steam.getLobbyOwner(LOBBY_ID), " == ", STEAM_ID)
 		return Steam.getLobbyOwner(LOBBY_ID) == STEAM_ID
 	return true
+
+func leave_lobby():
+	Steam.leaveLobby(LOBBY_ID)
+	LOBBY_ID = 0

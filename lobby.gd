@@ -3,6 +3,7 @@ extends Control
 @onready var create = $margin/lobby_selector/VBoxContainer/create
 @onready var refresh = $margin/lobby_selector/VBoxContainer/refresh
 @onready var list = $margin/lobby_selector/lobby_list/scroller/list
+@onready var player_list = $margin/room/player_list
 
 @onready var room = $margin/room
 @onready var lobby_selector = $margin/lobby_selector
@@ -58,6 +59,9 @@ func join_lobby():
 	lobby_selector.hide()
 	room.show()
 
+	for node in player_node.values():
+		if node != null:
+			node.queue_free()
 	player_node.clear()
 	# update player node
 	update_lobby()
@@ -66,13 +70,31 @@ func join_lobby():
 	level.disabled = not GlobalSteam.is_host()
 
 func update_lobby():
-	pass
+
+	var members_id = []
+
+	# add new players
+	for member in GlobalSteam.LOBBY_MEMBERS:
+		if not player_node.has(member["steam_id"]) or player_node[member["steam_id"]] == null:
+			#create new node
+			var node = preload("res://player_lobby.tscn").instantiate()
+			player_node[member["steam_id"]] = node
+			player_list.add_child(node)
+			node.player_name.text = member["steam_name"]
+			node.kick.disabled = not GlobalSteam.is_host() or member["steam_id"] == GlobalSteam.get_host()
+			node.player.disabled = not GlobalSteam.is_host() and member["steam_id"] != GlobalSteam.STEAM_ID
+			node.player_id = member["steam_id"]
+		members_id.push_back(member["steam_id"])
+
+	# remove old players
+	for node in player_node.values():
+		if node != null and not node.player_id in members_id:
+			node.queue_free()
 
 func leave_lobby():
 	lobby_selector.show()
 	room.hide()
-	Steam.leaveLobby(GlobalSteam.LOBBY_ID)
-
+	GlobalSteam.leave_lobby()
 
 ######################
 ##     Data sync
