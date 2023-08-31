@@ -112,8 +112,6 @@ func leave_lobby():
 	if GlobalSteam.is_host():
 		disconnect_all()
 
-	GlobalSteam._on_Open_Lobby_List_pressed()
-
 ######################
 ##     Data sync
 ######################
