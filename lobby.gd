@@ -95,12 +95,13 @@ func handle_data(data):
 	# Print the packet to output
 	print("Packet: "+str(data))
 
-	if data["sync_type"] == SyncType.LevelChange:
-		level.selected = data["level"]
-	elif data["sync_type"] == SyncType.TeamChange:
-		player_node[data["id"]].player.selected = data["team_id"]
-	elif data["sync_type"] == SyncType.StartGame:
-		launch_game.emit()
+	if data.has("sync_type"):
+		if data["sync_type"] == SyncType.LevelChange:
+			level.selected = data["level"]
+		elif data["sync_type"] == SyncType.TeamChange:
+			player_node[data["id"]].player.selected = data["team_id"]
+		elif data["sync_type"] == SyncType.StartGame:
+			launch_game.emit()
 
 func on_level_change():
 	pass
